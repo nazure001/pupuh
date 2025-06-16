@@ -365,7 +365,12 @@ Tugas Anda:
 1. Periksa kesesuaian lirik dengan aturan Guru Lagu dan Guru Wilangan untuk Pupuh ${selectedPupuh}. Tampilkan dalam format tabel Markdown.
 2. Berikan saran rasa (watek) saat membawakan Pupuh ini.
 
-Jawaban dalam JSON dengan "ruleAnalysis" dan "performanceTip".`;
+Jawaban hanya dalam format JSON berikut:
+{
+  "ruleAnalysis": "...",
+  "performanceTip": "..."
+}
+`;
 
     try {
         const response = await fetch('/api/gemini', {
