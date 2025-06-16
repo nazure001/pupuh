@@ -412,7 +412,10 @@ if (!part || !part.text) throw new Error("Respons AI kosong");
 let parsedJson;
 
 try {
-    parsedJson = JSON.parse(part.text);
+    let match = part.text.match(/{[^]*}/);
+if (!match) throw new Error("Tidak menemukan JSON di teks AI");
+
+parsedJson = JSON.parse(match[0]);
 } catch (e) {
     geminiErrorEl.textContent = "AI memberikan hasil yang tidak sesuai format JSON. Coba cek kembali input lirik.";
     geminiErrorEl.style.display = 'block';
