@@ -342,54 +342,57 @@
         ctx.stroke();
     }
 
-    // --- Gemini AI Analysis ---
-    async function analyzeWithGemini() {
-        geminiLoadingEl.style.display = 'flex';
-        geminiPlaceholderEl.style.display = 'none';
-        geminiFeedbackEl.style.display = 'none';
-        geminiErrorEl.style.display = 'none';
-        
-        const selectedPupuh = pupuhSelect.value;
-        const prompt = `Sebagai seorang ahli karawitan Sunda, analisis lirik berikut yang dinyanyikan sebagai Pupuh ${selectedPupuh}.
-        Lirik: "${finalTranscriptText}"
-        Tugas Anda:
-        1.  **Analisis Aturan**: Periksa kesesuaian lirik dengan aturan Guru Lagu dan Guru Wilangan untuk Pupuh ${selectedPupuh}. Tampilkan hasil analisis dalam format tabel Markdown yang jelas.
-        2.  **Saran Penjiwaan**: Berikan saran singkat (2-3 kalimat) mengenai karakter atau rasa (watek) yang seharusnya disampaikan saat menyanyikan Pupuh ${selectedPupuh}.
-        Berikan output dalam format JSON dengan kunci "ruleAnalysis" (berisi string dengan tabel Markdown) dan "performanceTip" (berisi string saran).`;
-        
-        const payload = {
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: {
-                responseMimeType: "application/json",
-                responseSchema: { type: "OBJECT", properties: { ruleAnalysis: { type: "STRING" }, performanceTip: { type: "STRING" } }, required: ["ruleAnalysis", "performanceTip"] }
-            }
-        };
-        const apiKey = "";
-        const apiUrl = `/api/gemini`;
+// --- Gemini AI Analysis ---
+async function analyzeWithGemini() {
+    geminiLoadingEl.style.display = 'flex';
+    geminiPlaceholderEl.style.display = 'none';
+    geminiFeedbackEl.style.display = 'none';
+    geminiErrorEl.style.display = 'none';
 
-        try {
-            const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-            if (!response.ok) throw new Error(`API Error: ${response.status}`);
-            const result = await response.json();
-            const part = result.candidates?.[0]?.content?.parts?.[0];
-            if (!part || !part.text) throw new Error("Respons API tidak valid.");
-            
-            const parsedJson = JSON.parse(part.text);
+    const selectedPupuh = pupuhSelect.value;
+    const prompt = `Sebagai seorang ahli karawitan Sunda, analisis lirik berikut yang dinyanyikan sebagai Pupuh ${selectedPupuh}.
+Lirik: "${finalTranscriptText}"
+Tugas Anda:
+1. Analisis Aturan: Periksa kesesuaian lirik dengan aturan Guru Lagu dan Guru Wilangan untuk Pupuh ${selectedPupuh}. Tampilkan hasil analisis dalam format tabel Markdown.
+2. Saran Penjiwaan: Berikan saran singkat mengenai karakter atau rasa (watek) yang seharusnya disampaikan.
 
-            // **FIX 3: Improved rendering using <pre> for markdown table**
-            const ruleHtml = `<h3 class="font-semibold text-white">Analisis Aturan (Guru Lagu & Wilangan)</h3><pre class="whitespace-pre-wrap font-mono bg-gray-900 p-3 rounded-md text-sm text-gray-300">${parsedJson.ruleAnalysis}</pre>`;
-            const tipHtml = `<h3 class="font-semibold text-white mt-4">Saran Penjiwaan (Watek)</h3><p class="text-gray-300 italic">${parsedJson.performanceTip}</p>`;
+Berikan output dalam format JSON dengan kunci "ruleAnalysis" dan "performanceTip".`;
 
-            geminiFeedbackEl.innerHTML = ruleHtml + tipHtml;
-            geminiFeedbackEl.style.display = 'block';
-        } catch (error) {
-            console.error("Gemini API Error:", error);
-            geminiErrorEl.textContent = "Gagal mendapatkan analisis dari AI. Coba lagi.";
-            geminiErrorEl.style.display = 'block';
-        } finally {
-            geminiLoadingEl.style.display = 'none';
-        }
+    try {
+        const response = await fetch('/api/gemini', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt })
+        });
+
+        if (!response.ok) throw new Error(`API Error: ${response.status}`);
+        const result = await response.json();
+        const part = result.candidates?.[0]?.content?.parts?.[0];
+
+        if (!part || !part.text) throw new Error("Respons API tidak valid.");
+
+        const parsedJson = JSON.parse(part.text);
+
+        const ruleHtml = `
+            <h3 class="font-semibold text-white">Analisis Aturan (Guru Lagu & Wilangan)</h3>
+            <pre class="whitespace-pre-wrap font-mono bg-gray-900 p-3 rounded-md text-sm text-gray-300">
+${parsedJson.ruleAnalysis}
+            </pre>`;
+
+        const tipHtml = `
+            <h3 class="font-semibold text-white mt-4">Saran Penjiwaan (Watek)</h3>
+            <p class="text-gray-300 italic">${parsedJson.performanceTip}</p>`;
+
+        geminiFeedbackEl.innerHTML = ruleHtml + tipHtml;
+        geminiFeedbackEl.style.display = 'block';
+    } catch (error) {
+        console.error("Gemini API Error:", error);
+        geminiErrorEl.textContent = "Gagal mendapatkan analisis dari AI. Coba lagi.";
+        geminiErrorEl.style.display = 'block';
+    } finally {
+        geminiLoadingEl.style.display = 'none';
     }
+}
     </script>
 </body>
 </html>
