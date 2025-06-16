@@ -384,16 +384,15 @@ async function analyzeWithGemini() {
     const manualLyricsInput = document.getElementById('manualLyrics');
 const usedLyrics = manualLyricsInput.value.trim() || finalTranscriptText;
 
-const prompt = `Sebagai seorang ahli karawitan Sunda, analisis lirik berikut yang dinyanyikan sebagai Pupuh ${selectedPupuh}.
-Lirik: "${usedLyrics}"
-Tugas Anda:
-1. Periksa kesesuaian lirik dengan aturan Guru Lagu dan Guru Wilangan untuk Pupuh ${selectedPupuh}. Tampilkan dalam format tabel Markdown.
-2. Berikan saran rasa (watek) saat membawakan Pupuh ini.
+const prompt = `
+Tolong jawab dengan tepat. Analisis lirik Pupuh ${selectedPupuh} berikut:
 
-Jawaban hanya dalam format JSON berikut:
+"${usedLyrics}"
+
+Berikan jawaban hanya dalam format JSON berikut, tanpa tambahan apapun:
 {
-  "ruleAnalysis": "...",
-  "performanceTip": "..."
+  "ruleAnalysis": "markdown tabel analisis Guru Lagu & Wilangan",
+  "performanceTip": "saran penjiwaan Pupuh"
 }
 `;
 
