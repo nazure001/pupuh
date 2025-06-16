@@ -356,13 +356,16 @@ async function analyzeWithGemini() {
     geminiErrorEl.style.display = 'none';
 
     const selectedPupuh = pupuhSelect.value;
-    const prompt = `Sebagai seorang ahli karawitan Sunda, analisis lirik berikut yang dinyanyikan sebagai Pupuh ${selectedPupuh}.
-Lirik: "${finalTranscriptText}"
-Tugas Anda:
-1. Analisis Aturan: Periksa kesesuaian lirik dengan aturan Guru Lagu dan Guru Wilangan untuk Pupuh ${selectedPupuh}. Tampilkan hasil analisis dalam format tabel Markdown.
-2. Saran Penjiwaan: Berikan saran singkat mengenai karakter atau rasa (watek) yang seharusnya disampaikan.
+    const manualLyricsInput = document.getElementById('manualLyrics');
+const usedLyrics = manualLyricsInput.value.trim() || finalTranscriptText;
 
-Berikan output dalam format JSON dengan kunci "ruleAnalysis" dan "performanceTip".`;
+const prompt = `Sebagai seorang ahli karawitan Sunda, analisis lirik berikut yang dinyanyikan sebagai Pupuh ${selectedPupuh}.
+Lirik: "${usedLyrics}"
+Tugas Anda:
+1. Periksa kesesuaian lirik dengan aturan Guru Lagu dan Guru Wilangan untuk Pupuh ${selectedPupuh}. Tampilkan dalam format tabel Markdown.
+2. Berikan saran rasa (watek) saat membawakan Pupuh ini.
+
+Jawaban dalam JSON dengan "ruleAnalysis" dan "performanceTip".`;
 
     try {
         const response = await fetch('/api/gemini', {
