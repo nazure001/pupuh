@@ -376,11 +376,20 @@ Jawaban dalam JSON dengan "ruleAnalysis" dan "performanceTip".`;
 
         if (!response.ok) throw new Error(`API Error: ${response.status}`);
         const result = await response.json();
-        const part = result.candidates?.[0]?.content?.parts?.[0];
+       const part = result.candidates?.[0]?.content?.parts?.[0];
+if (!part || !part.text) throw new Error("Respons AI kosong");
 
-        if (!part || !part.text) throw new Error("Respons API tidak valid.");
+let parsedJson;
 
-        const parsedJson = JSON.parse(part.text);
+try {
+    parsedJson = JSON.parse(part.text);
+} catch (e) {
+    geminiErrorEl.textContent = "AI memberikan hasil yang tidak sesuai format JSON. Coba cek kembali input lirik.";
+    geminiErrorEl.style.display = 'block';
+    geminiLoadingEl.style.display = 'none';
+    console.warn("Isi respon Gemini:", part.text);
+    return;
+}
 
         const ruleHtml = `
             <h3 class="font-semibold text-white">Analisis Aturan (Guru Lagu & Wilangan)</h3>
