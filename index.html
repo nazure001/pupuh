@@ -353,8 +353,11 @@
     const selectedPupuh = pupuhSelect.value;
 
     const prompt = `Berikut adalah lirik Pupuh ${selectedPupuh} dalam Bahasa Sunda:\n"${usedLyrics}"\n\n
-Tolong analisis:\n1. Aturan Guru Lagu dan Guru Wilangan\n2. Saran penjiwaan (watek)\n\n
-Berikan jawaban dalam format:\nAnalisis:\n...\n\nSaran Watek:\n...`;
+Tolong analisis dan jawab **hanya** dalam format JSON:\n
+{
+  "ruleAnalysis": "Penjelasan Guru Wilangan dan Guru Lagu...",
+  "performanceTip": "Saran rasa/watak dalam pembawaan pupuh..."
+}`;
 
     try {
         const response = await fetch('/api/chatgpt', {
