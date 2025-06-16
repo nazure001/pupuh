@@ -348,15 +348,15 @@
         ctx.stroke();
     }
 // --- ChatGPT Analysis ---
-        async function analyzeWithChatGPT() {
+async function analyzeWithChatGPT() {
     const usedLyrics = document.getElementById('manualLyrics').value.trim() || finalTranscriptText;
     const selectedPupuh = pupuhSelect.value;
 
     const prompt = `Berikut adalah lirik Pupuh ${selectedPupuh} dalam Bahasa Sunda:\n"${usedLyrics}"\n\n
-Tolong analisis dan jawab **hanya** dalam format JSON:\n
-{
-  "ruleAnalysis": "Penjelasan Guru Wilangan dan Guru Lagu...",
-  "performanceTip": "Saran rasa/watak dalam pembawaan pupuh..."
+Tolong analisis:\n1. Aturan Guru Lagu dan Guru Wilangan\n2. Saran penjiwaan (watek)\n\n
+Berikan **jawaban hanya dalam format JSON** seperti ini:\n{
+  "ruleAnalysis": "...",
+  "performanceTip": "..."
 }`;
 
     try {
@@ -367,10 +367,43 @@ Tolong analisis dan jawab **hanya** dalam format JSON:\n
         });
 
         const result = await response.json();
-        const message = result.choices?.[0]?.message?.content || 'Tidak ada respon.';
-        geminiFeedbackEl.innerHTML = `<pre class="text-sm text-gray-300 whitespace-pre-wrap">${message}</pre>`;
+        const message = result.choices?.[0]?.message?.content || '';
+
+        let parsedJson;
+        try {
+            // Coba ambil hanya bagian JSON dari message
+            const match = message.match(/{[^]*}/);
+            if (!match) throw new Error("Format JSON tidak ditemukan");
+            parsedJson = JSON.parse(match[0]);
+
+            // ✅ Simpan ke Supabase
+            await fetch('/api/save-analysis', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    pupuh: selectedPupuh,
+                    lyrics: usedLyrics,
+                    ruleAnalysis: parsedJson.ruleAnalysis,
+                    performanceTip: parsedJson.performanceTip,
+                }),
+            });
+
+            // ✅ Tampilkan ke UI
+            geminiFeedbackEl.innerHTML = `
+                <h3 class="font-semibold text-white">Analisis Aturan (Guru Lagu & Wilangan)</h3>
+                <pre class="whitespace-pre-wrap font-mono bg-gray-900 p-3 rounded-md text-sm text-gray-300">
+${parsedJson.ruleAnalysis}
+                </pre>
+                <h3 class="font-semibold text-white mt-4">Saran Penjiwaan (Watek)</h3>
+                <p class="text-gray-300 italic">${parsedJson.performanceTip}</p>`;
+        } catch (e) {
+            console.warn("❌ Parsing JSON gagal:", e, message);
+            geminiFeedbackEl.innerHTML = `<pre class="text-sm text-gray-300 whitespace-pre-wrap">${message}</pre>`;
+        }
+
         geminiFeedbackEl.style.display = 'block';
     } catch (err) {
+        console.error("❌ Gagal ambil dari ChatGPT:", err);
         geminiErrorEl.textContent = 'Gagal mendapatkan analisis dari ChatGPT.';
         geminiErrorEl.style.display = 'block';
     }
@@ -414,17 +447,31 @@ if (!part || !part.text) throw new Error("Respons AI kosong");
 let parsedJson;
 
 try {
-    let match = part.text.match(/{[^]*}/);
-if (!match) throw new Error("Tidak menemukan JSON di teks AI");
+  let match = part.text.match(/{[^]*}/);
+  if (!match) throw new Error("Tidak menemukan JSON di teks AI");
 
-parsedJson = JSON.parse(match[0]);
+  parsedJson = JSON.parse(match[0]);
+
+  // ✅ Tambahkan penyimpanan ke Supabase di sini
+  await fetch('/api/save-analysis', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      pupuh: selectedPupuh,
+      lyrics: usedLyrics,
+      ruleAnalysis: parsedJson.ruleAnalysis,
+      performanceTip: parsedJson.performanceTip,
+    }),
+  });
+
 } catch (e) {
-    geminiErrorEl.textContent = "AI memberikan hasil yang tidak sesuai format JSON. Coba cek kembali input lirik.";
-    geminiErrorEl.style.display = 'block';
-    geminiLoadingEl.style.display = 'none';
-    console.warn("Isi respon Gemini:", part.text);
-    return;
+  geminiErrorEl.textContent = "AI memberikan hasil yang tidak sesuai format JSON. Coba cek kembali input lirik.";
+  geminiErrorEl.style.display = 'block';
+  geminiLoadingEl.style.display = 'none';
+  console.warn("Isi respon Gemini:", part.text);
+  return;
 }
+
 
         const ruleHtml = `
             <h3 class="font-semibold text-white">Analisis Aturan (Guru Lagu & Wilangan)</h3>
